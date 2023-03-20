@@ -1,0 +1,165 @@
+				Node.js
+.....................................................................................
+What is Node.js?
+Why Node.js?
+Arch of Node.js
+Node Modules
+Node async programming implementation
+Node basic io modules
+Node http modules
+NPM basics
+Introduction to Express
+......
+
+What is Node?
+   Node is javascript platform and run time to run js code.
+
+Javascript Runtime:
+  
+Types of js runtime.
+1.Embeded mode
+   Run time is embeded into another app eg: Browser
+
+Every web browser has itswon js runtime
+ =>Chrome - V8
+ =>Firefox - Spider Monkey
+ =>Edge -  Chakra
+
+2.Standalone Mode
+  V8 - Open source js engine
+
+Node.js platform was created on V8 engine with "Non-Blocking Arch"
+
+Why Node js was created?
+
+   In order to build 'non blocking network apps'
+
+What is Non blocking? and What is blocking?
+ 
+ in order to understand this 
+
+How web server works?
+    
+=>Request -Reply(response) model
+=>When ever a request is received by web server , web server assigns or allocats a   thread  to handle complete request and response for a client.
+ 
+Request Per Thread Model:
+  Every web server receives a request and allocate a thread to serve the response.
+  Till response is received a thread is waiting this is called as blocking
+  lets say 5ms is waiting means, during that period that is blocked
+
+What will happen if a thread is blocked for a particular time?
+
+=>when you create a thread it takes some memory,some times a thread eats up to 5mb   memory.
+=> When a thread is blocked for some time,os moves that thread to 'sleeping state'
+   and brings that thread to 'active state' when io is ready which is called "context    switch" . when ctx switch happens most of the cpu time is wasted.
+
+Based on this problem , new article/white paper was submitted "C10K" Problem
+
+The C10k problem is the problem of optimizing network sockets to handle a large number of clients at the same time
+   How to reduce cpu time, and memory?
+
+Birth of new Arch "Non Blocking"
+
+Objective:
+  => How to avoid blocking a thread?
+  => How to reduce no of threads?
+
+in order to achive this we need to change os  IO arch itself.
+....................................................................................
+				IO fundamentals
+....................................................................................
+
+What is IO?
+=>Input/output (IO) refers to interaction with devices such as a hard drive, network
+ Generally anything that is not happening in the CPU is called IO
+
+=>When you call an API that requests data from IO, you will not get a response instantly, but with some delay
+
+=>This delay can be very small for requesting a file on a hard drive, and much longer when requesting data from a network
+
+
+How IO Works in operating System?
+
+File Descriptor:
+File Descriptor is a low level program written in c language or assembly/machine lanage
+File Descriptor is a program which is a bridge between application runtime and low level io channels(keyboard,monitor,hard drive,Network Interface Card(NEC))
+
+How many fd?
+  Every process has its own file descriptor instance
+  When ever process is created, os initalizes file descriptor instance.
+
+File Descriptor is just c program having two fields called index and value
+
+index keeps the number and its value keeps the device location as pointer.
+
+There are 3 default index and value
+
+0 - keyboard - input
+1 - Monitor-output
+2 - error - output
+
+....................................................................................
+				How to read from disk file?
+Blocking IO
+
+ Every process thread will add entry into file descriptor table waits for io 
+ until the threads is blocked
+
+Non Blocking IO - IO Multiplexing:
+..................................
+
+Event Driven Programming is solution to implement non blocking or io Multiplexing.
+
+Linux operating system introduced in 2000 the first non blocking system io api.
+
+=>select api
+  =>In this model the control is returned from the kernal immediatly without waiting
+  =>Application makes explicit read call to read data from the kernal buffer
+Here the drawbacks is two api calls.
+
+=>Poll api
+  =>Poll api was introduced to solve the problem of manual read call.
+     =>Even driven model
+
+=>Epoll api - which is very latest 
+
+The first Non blocking arch introduced by the server called "Nginx".
+
+The second non blocking arch introduced by Node.js
+
+Node.js Platform Arch:
+........................
+
+There are two major components
+
+1.V8
+   It is javascript engine for running js code.
+2.libuv
+   libuv is a multi-platform support library with a focus on asynchronous I/O.
+   libuv is platform non blocking io abstraction framework.
+
+libvu provides
+
+1.Non blocking api abstraction layer(network related apis)
+2.Blocking api abstraction layer( some file system api....)
+
+There are two thread types;
+
+1.Non blocking threads
+    Event loop thread:
+      Receive request and handles events from the kernal.
+Note : 
+   Per Node process we have only one "event loop thread" available
+
+2.Blocking threads
+   Node provides set of threads (more threads) which are part of thread pool.
+ The thread is from thread pool is used to perform blocking operations , long running process.
+   Per Node process we have more "blocking loop thread" available
+
+
+
+
+
+
+
