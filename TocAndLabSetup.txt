@@ -1,0 +1,16 @@
+				Nest 
+
+Topics:
+1.node js fundamentals
+2.Typescript 
+3.Nest js
+  REST Webservices ,GraphQL,RPC based (gRPC)
+  Database interaction
+  Microservices
+Nest  = {nodejs,ts/js,microservices(moleculer)}
+
+Lab:
+
+1.Node.js
+2.VS code
+3.Docker Desktop
