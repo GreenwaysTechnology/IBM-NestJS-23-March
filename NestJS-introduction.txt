@@ -1,0 +1,453 @@
+				Nest JS
+.....................................................................................
+
+What is Nest.js?
+   Nest.js is a framework for building efficient,scalable Node.js server-side applications.
+
+Server side apps Types:
+1.Monolith - Old of way building distributed apps
+2.Microservices -Modern way of building distributed apps.
+
+Nest.js can be used to build both applications.
+
+Our focus mostly is Microservice based apps.
+
+Micro service is collection of independant apps talks each other for exchaning data.
+
+Apps  are collection of apis.
+
+In Genernal we can create different types "api"
+
+API means Application programming interface.
+
+API is implemented in many ways.
+
+API is implmented via object oriented models like classes or via functional programming.
+
+Objects encapsulate apis.
+
+API are used to carry out biz logic like "fetching data,saving,updating,deleting,sorting,filtering,"
+
+Objects are hosted on runtimes, the other applications like other apis or userinterface apps like browsers,mobile apps may try to communicate those objects.
+
+Based on Communications(Communication Protocals) apis are classified:
+
+There are many protocals.
+
+HTTP
+HTTP2
+TCP
+UDP
+
+HTTP based APIS(App)
+..................
+1.Web Services
+  1.1.XML based- HTTP With SOAP - SOAP Web Services
+  1.2. Data Independant based - Direct HTTP  with various data formates like    json,xml,html,pdf.... : RestFull Webservices.
+  1.3.Data Independant based - Direct HTTP  with JSON based
+       ...GraphQL
+    GraphQL is alternate to RESTFull WebServices.
+
+2.2.RPC Based API
+ Remote Procedure call.
+APIS are communicated via "TCP" Protocal at low and high level.
+
+RPC based in java
+  =>RMI,EJB...
+RPC language independant
+  =>gRPC is most popular framework for building TCP based apps at low level
+  =>gPRC uses a protocal called "protobuff" Which is HTTP 2 Based. 
+
+Nest.js supports "REST api,GraphQl api, gRPC api" style development.
+...................................................................................
+ 		         Nest.is Development Arch
+
+
+Nest apps can be written in plain js or with object oriented js via Typescript.
+
+				  Nest App
+				     |
+			-------------------------------
+			|                             |
+		      Javascript                   Typescript
+
+
+Note: Nest with Typescript is highly recommended.
+
+Popular Server side(Micro/monolithic) frameworks
+
+1.express
+2.hapi
+3.fastify
+4.moleculer
+5.loopback
+etc....
+ There are lot of  frameworks available in the market but lacks common problems like 
+popular design patterns like MVC,Dependency,Decorator based,Class Based object oriented 
+ You can see all  best features and designpatterns available in the front frameworks
+like angular,react,vue
+ if you take angular is the best framework which incorporates all industry standard design patterns like MVC,dependency injection,class and interface based,decorators based,modularity
+
+What if i want the angular like framework in server side , there was no frame work but now we have that is "Birth of NEST.js"
+
+
+	     Nest.js is replica of Angular in the Server side
+		  Nest inspired from "Angular"
+
+Features of Nest.js:
+
+1.Nest is MVC Framework
+2.Nest is Dependency Injection framework
+3.Nest is Modular framework - ES 6 based modularity and Logical Modularity.
+4.NEST is pure class and interface based
+5.Nest supports Decortors
+6.Nest supports all typescript features
+7.Nest provides infrastructure to build any type of apis 
+8.Nest supports "reactive programming" via rxjs for advanced async stream   based programming 
+....................................................................................
+			 Project Setup- Nest app creations
+...................................................................................
+
+Nest CLI
+  It is command line interface tool that helps to
+
+ =>initialize /create new project
+ =>dev features like hot reloading, bundling for testing
+ =>schematic features to create artifacts -  code generation.
+ =>To create production builds
+ =>To test apps including unit testing,etoe testing..
+
+How to install nest cli?
+
+npm install -g @nestjs/cli
+
+like angular cli
+npm install -g @angular/cli  
+
+How to verify?
+>nest --help
+
+nest --help
+Usage: nest <command> [options]
+
+Options:
+  -v, --version                                   Output the current version.
+  -h, --help                                      Output usage information.
+
+Commands:
+  new|n [options] [name]                          Generate Nest application.
+  build [options] [app]                           Build Nest application.
+  start [options] [app]                           Run Nest application.
+  info|i                                          Display Nest project details.
+  add [options] <library>                         Adds support for an external library to your project.
+  generate|g [options] <schematic> [name] [path]  Generate a Nest element.
+    Schematics available on @nestjs/schematics collection:
+      ┌───────────────┬─────────────┬──────────────────────────────────────────────┐
+      │ name          │ alias       │ description                                  │
+      │ application   │ application │ Generate a new application workspace         │
+      │ class         │ cl          │ Generate a new class                         │
+      │ configuration │ config      │ Generate a CLI configuration file            │
+      │ controller    │ co          │ Generate a controller declaration            │
+      │ decorator     │ d           │ Generate a custom decorator                  │
+      │ filter        │ f           │ Generate a filter declaration                │
+      │ gateway       │ ga          │ Generate a gateway declaration               │
+      │ guard         │ gu          │ Generate a guard declaration                 │
+      │ interceptor   │ itc         │ Generate an interceptor declaration          │
+      │ interface     │ itf         │ Generate an interface                        │
+      │ middleware    │ mi          │ Generate a middleware declaration            │
+      │ module        │ mo          │ Generate a module declaration                │
+      │ pipe          │ pi          │ Generate a pipe declaration                  │
+      │ provider      │ pr          │ Generate a provider declaration              │
+      │ resolver      │ r           │ Generate a GraphQL resolver declaration      │
+      │ service       │ s           │ Generate a service declaration               │
+      │ library       │ lib         │ Generate a new library within a monorepo     │
+      │ sub-app       │ app         │ Generate a new application within a monorepo │
+      │ resource      │ res         │ Generate a new CRUD resource                 │
+      └───────────────┴─────────────┴──────────────────────────────────────────────┘
+
+How to create new Project?
+   
+   By default nest creates "REST api" - Web Services
+
+nest new myfirst-app
+
+my-nest-app> code .
+
+Project Structure:
+  It has lot of files and folders.
+
+readMe.md
+  How to use this project
+
+package.json
+  gives information about this project like 
+ 
+ -basic scripts - run,build,test
+ -Dependency - basic default dependency for the project.
+
+Basic nest dependency:
+
+dev + prod
+ @nest/common
+ @nest/core
+ @nestjs/platform-express
+ rxjs
+
+What is @?
+  private package
+what is nest?
+  nest folder
+what is common or core 
+ subfolder
+
+nest-cli.json
+  provides information /configuration about the project.
+
+node_modules
+   -provides all basic libs and apis
+
+src
+  ->root application folder
+ files
+   -main.ts
+   -app.module.ts
+   -app.controller.ts
+   -app.contoller.spec.ts
+   -app.service.ts
+
+test
+  -contains etoe test configurations
+....................................................................................
+
+How to start app?
+
+There are three mode
+
+1.dev mode
+2.dev mode with watch
+3.prod mode
+
+# development
+$ npm run start
+
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
+....................................................................................
+			Nest js Application Arch
+....................................................................................
+
+Nest Core Concepts:
+
+1.Modularity:
+...........
+There are two types of modularity
+ =>Physical Modularity -  files and folders along with "ES 6 module keywords
+   "export,export default and import"
+
+=>Logical Modularity
+   Code is organized into object called module.
+
+Any distributed apps/user interface apps.
+  App is collection of features like customers,products,payments.
+Each feature is classfied as layers.
+
+Basic Layers in Server side apps:
+................................
+In case if it is WebService(REST Api).
+
+1.Controller    
+   Where We expose apis which to be communicated by other apps like front end or    other apis
+
+2.Service 
+     Where we have biz logic like save,findAll,delete,remove,filtering,sorting
+   Services are communicated by controller.
+
+3.Repository(DAO)
+     This is optional layer now a days, which directly communicates the Datasources
+  like databases via ORM frameworks.
+
+How to organize the features in code?
+
+for eg : order Feature - controllers,services,orm(entities),utilities......
+
+each layer of code is organized phsyically "files and folders" -This is called phsyical modularity.
+
+ order
+  |
+  controllers
+    OrderController.ts
+  services
+    OrderService.ts
+  utilites
+    OrderUtility.ts
+
+According to Nest code style guide
+
+feature based
+ 
+src
+   |
+   order
+    order.controller.ts
+    order.service.ts
+    order.utility.ts
+    order.entity.ts
+    order.controller.spec.ts
+    ...+other files
+   product
+    product.controller.ts
+    product.service.ts
+    product.utility.ts
+    product.entity.ts
+    product.controller.spec.ts
+      
+
+eg:
+
+ src
+   |
+   orders
+     |
+     order.service.ts
+
+export class OrderService {
+     
+  ...apis
+}
+
+ src
+   |
+   orders
+     |
+     order.controller.ts
+
+
+import {OrderService} from './order.service'
+
+export class OrderController {
+     constructor(private orderService:OrderService){}
+}
+.....................................................................................
+  
+2.Nest is Object oriented
+  Nest has been built Typescript rich features like strong typing,class based...
+
+In Nest every thing is Object.
+
+In Nest objects are classified into two category.
+
+1.Nest infra structure object
+2.Domain objects
+
+
+1.Infrastructure object
+   The object which makes up applications..
+ -Module -Logical Modularity
+ -Controllers
+ -Services and Providers
+ -Pipes
+ -Guards
+   
+2.Domain objects
+  Objects which represents data called as models/entity.
+  Domain objects are mostly javascript literal objects /class objects
+
+Module Object:
+   Nest application is encasulated into one single Big Object called "Root Module/App Module".
+
+How to create object?
+
+we need to declare class?
+
+export class OrderController{}
+
+we need to create object 
+  
+  let orderCtrl = new OrderController()
+
+Are we going to create objects like above in Nest?
+     "No"
+
+Nest framework /Nest Runtime (nest ioc engine/container) takes care of "creating Objects and linking objects with objects automatically" which is called "IOC"
+
+Refer
+https://www.martinfowler.com/articles/injection.html
+
+
+How nest understands that this class is infrastructure class?
+
+
+export class OrderController{} 
+
+export class Greeting {}
+
+ We can tell to the nest ioc container via "Decorators"
+
+Nest provides lot of built in Decorators
+
+ @Controller('order')
+ export class OrderController{} 
+
+  when ever nest sees this code, which creates object/initalizes all dependencies.
+
+We will see lot of decorators later
+
+Basic Decorators
+
+1.@Controller -controller
+2.@Injectable - service
+3.@Module-Module Object
+....................................................................................
+				Primary Objects
+				     and 
+                                Nest BootStrap Process
+.....................................................................................
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
