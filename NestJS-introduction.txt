@@ -401,29 +401,553 @@ Basic Decorators
 2.@Injectable - service
 3.@Module-Module Object
 ....................................................................................
-				Primary Objects
-				     and 
+				  Primary Objects
+				      and 
                                 Nest BootStrap Process
 .....................................................................................
-	
+
+Nest Application Object:
+
+Every Nest app is encapsulated inside Nest Application.
+Every Nest app has entry point called "main" program.
+
+How to create Application object?
+     By calling NestFactory is class having method called "create" method.
+
+ NestFactory.create => className.method 
+   Here "create" method is static method
+ static methods are called without creating instances
+
+How to create object?
+
+   new ClassName() =>constructor pattern
+   className.createInstance() =>Factory Pattern /Builder Pattern  
+
+create methods take "AppModule" as parameter.
+
+AppModule is object which encapuslate other objects
+
+Every NestJs application "must have one single Root /App Module"
+
+Every AppModule must have one single Controller called "Main Controller/App Controller"
+.....................................................................................
+			  Nest Web Service
+
+By default nest app is encapulsted with "RESTAPI".
+
+if you want to run web service(restapi), you need web server and container.
+
+Nest application also need web container.
+
+By default nest nest applications are running on the top of "express" 
+
+Express provides low level web container features
+
+express: 
+ const express =require('express')
+
+ const app = express()
+
+ app.listen(3000,()=>{});			
+
+  'Nest application can be executed on even in another container too "Fastify" '
+....................................................................................
+
+How to write module?
+
+ Module is logical contaniner which encasulates other objects like controllers,services...other submodules
+
+Whether you create main module or submodule , the syntax remains same.
+
+In nest every thing is object including module,
+ in order to create object we need class.
+
+Step 1: Declare class and you have share the class so that other class or program can use (You have to use es 6 export or export default keyword).
+
+export class AppModule {
+  
+}
+
+Step 2: 
+ we need to create object for the class.
+ you need to say what type of object you create? (domain or infra)
+ In case of infra object we never create object using new Constructor().
+ Nest provides a feature called "IOC container" Which is program , responsiable for 
+ creating objects
+ How to tell to the IOC Container that go and create object?
+   Via "Decorators"
+ in order to create module object "@Module"  decorator is used.
+ 
+import { Module } from "@nestjs/common";
+
+//in order to qualify this is Module object
+@Module()
+export class AppModule {}
+
+Decorator Meta Data:
+.....................
+  The Decorator may or may not take parameters.
+  Parameter value can any type like primtives or object or array.
+@Module parameter:
+  It takes object as parameter.
+
+ "Ioc container not only create objects but also properly link all dependencies"
+
+Decorator Meta Data takes configuration which is information for "Nest" IoC container.
+
+
+//parameters are used to link objects
+@Module({
+  imports: [],
+  controllers: [],
+  providers: []
+})
+imports:[]
+   -All submodules like usermodule,product module
+controllers:
+   -List of controllers part of this module
+providers:
+   -List of services to be created
+....................................................................................
+			 Controllers
+....................................................................................
+
+Controller is also object which is created by Nest IOC container
+
+Step 1: Declare class and export
+export class AppController { 
+  
+}
+Step 2: Decorate as controller
+
+@Controller()
+export class AppController { 
+
+}
+parameter is empty which means root "/" without route.
+
+Step 3: Write http based apis.
+ 
+Nest provides to mark api which to be communicated by http clients using HTTP verbs
+ "GET,POST,DELETE,PUT"
+
+import { Controller, Get } from "@nestjs/common";
+
+@Controller()
+export class AppController {
+  constructor() { }
+  //apis
+  @Get() // http get method
+  public hello(): string {
+    return 'Hello Nest App!'
+  }
+}
+....................................................................................
+			   Service Object
+....................................................................................
+
+Service is layer where we write biz logic.
+
+Service is object , created by Nest ioc container.
+
+Steps:
+1.declare class and export
+
+
+export class AppService {
+  
+}
+
+2.Decorate the service with @Injectable
+
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class AppService {
+  constructor() { }
+  //biz logic
+  public sayHello(): string {
+    return "Hello Nest App!";
+  }
+}
+
+3.Configure the service inside module -AppModule
+
+ providers:[AppService]
+ import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  constructor() {}
+  //biz logic
+  public sayHello(): string {
+    return 'Hello Nest App!!';
+  }
+}
+...................................................................................
+			How to structure Nest Application
+			    (Nest style guide)
+....................................................................................
+
+Nest Application must be modularizied.
+
+Every Nest application is created based on "features/domain"
+
+A feature module simply organizes the code relevant for a sepcific feature, keeping
+code organized and establilishing clear boundaries.
+This helps us manage complexity and develop with "SOLID" principles, as the size of the project/app team grows..
+
+products,customers,payments,....
+common/util
+
+You have to create sub folder which represents domain /feature
+
+src
+|
+heroes
+  |
+   hero.controller
+   hero.service
+   hero.module
+villains
+  villain.controller
+  villain.service
+  villain.module
+
+shared
+ shared.module.ts
+ filter-text.service.ts
+
+
+2.plan Logical  modularity
+
+=>For each domain, we must have logical modularity - sub module
+
+heroes
+   hero
+   hero-list
+   shared
+   heroes.module.ts
+
+All controllers and services related to that domain, must be injected into that submodule only, not inside main/app module.
+
+rootFolder - src
+   Must contain only root module and root Controller
+
+File structure conventions:
+...........................
+
+->file must follow the domain model.
+   greet
+   user
+   product
+   customer
+->file name must follow like
+  domainname.infraname.ts
+  
+  greet.module | service |controller |guard | pipe .ts | spec.ts
+
+  greet.module.ts
+  greet.controller.ts
+  greet.service.ts
+  greet.controller.spec.ts
+
+->class Names
+   ->Noun Customer,Product,Greeter
+	Customer|Module|Service|Controller
+
+   ->It has to end With infra Objects
+     CustomerModule
+     CustomerController
+     CustomerService
+
+->root files
+   app.controller|module|service
+
+if you have any dto/models/entities and interfaces
+  
+ src
+  |
+   heroes
+     |
+     dto
+       | 
+       hero.dto.ts
+    interfaces
+       hero.interface.ts
+
+
+Eg:
+...
+Greeter :Domain
+
+Step: 0 : create folder
+src/greeter
+Step: 1 Create SubModule
+
+src/greeter/greeter.module.ts
+import { Module } from '@nestjs/common';
+
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [],
+})
+export class GreeterModule {}
+
+Step 2:create Service layer
+import { Injectable } from "@nestjs/common/decorators";
+
+@Injectable()
+export class GreeterService {
+    constructor() { }
+
+    //apis 
+    public sayGreet(): string {
+        return 'Greet to Nest App'
+    }
+
+}
+
+Dependency Configuration:
+src/greeter/greeter.module.ts
+import { Module } from '@nestjs/common';
+import { GreeterService } from './greeter.service';
+
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [GreeterService],
+})
+export class GreeterModule {}
+
+
+Step 3: write controller 
+import { Controller, Get } from "@nestjs/common";
+import { GreeterService } from "./greeter.service";
+
+
+@Controller('api/greeter')
+export class GreeterController {
+    constructor(private greeterService: GreeterService) { }
+
+    //HTTP apis
+    @Get()
+    public sayGreet(): string {
+        return this.greeterService.sayGreet();
+    }
+}
+
+Dependency Configuration:
+import { Module } from '@nestjs/common';
+import { GreeterController } from './greeter.controller';
+import { GreeterService } from './greeter.service';
+
+@Module({
+    imports: [],
+    controllers: [GreeterController],
+    providers: [GreeterService],
+})
+export class GreeterModule { }
+
+Step 4:
+ Configure GreeterModule inside AppModule.
+import { Module } from "@nestjs/common";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { GreeterModule } from "./greeter/greeter.module";
+
+
+//in order to qualify this is Module object
+@Module({
+  imports: [GreeterModule], // if AppModule has any submodules as dependency
+  controllers: [AppController], // if AppModule has controller as dependency
+  providers: [AppService]  // if AppModule has Service as Dependency.
+})
+export class AppModule { }
+.....................................................................................
+.....................................................................................
+			   Automation-Code Generation
+.....................................................................................
+
+Steps we have followed:
+
+1.created folder
+2.created files like modules/controllers/services
+3.depedency injection and configuration
+
+It is complex step, in order to avoid this steps manually nest offers a cli command
+
+nest generate
+   
+ generate|g [options] <schematic> [name] [path]  Generate a Nest element.
+
+options:
+  -d, --dry-run                      Report actions that would be taken without writing out results.
+  -p, --project [project]            Project in which to generate files.
+  --flat                             Enforce flat structure of generated element.
+  --no-flat                          Enforce that directories are generated.
+  --spec                             Enforce spec files generation. (default: true)
+  --skip-import                      Skip importing (default: false)
+  --no-spec                          Disable spec files generation.
+  -c, --collection [collectionName]  Schematics collection to use.
+  -h, --help                         Output usage information.
 
 
 
+eg:
+nest g mo users
 
+CREATE src/users/users.module.ts (82 bytes)
+UPDATE src/app.module.ts (313 bytes)
 
+src/users/users.module.ts
+import { Module } from '@nestjs/common';
 
+@Module({})
+export class UsersModule {}
 
+src/app.module.tsimport { Module } from "@nestjs/common";
+import { AppController } from "./app.controller";
+import { GreeterModule } from "./greeter/greeter.module";
+import { UsersModule } from './users/users.module';
 
+@Module({
+  imports: [GreeterModule, UsersModule],
+  controllers: [AppController]
+})
+export class AppModule { }
 
+...........
 
+Service:
+nest g s users/user --flat
+CREATE src/users/user.service.ts (88 bytes)
+CREATE src/users/user.service.spec.ts (446 bytes)
+UPDATE src/users/users.module.ts (241 bytes)
+....................................................................................
+			    Building REST API
+...................................................................................	
 
+Controllers
+Routing
+Request Objects
+Resources
+Status and Headers
+Request Parameters
+Request Payload
+..
 
+Controllers:
+  Controllers are responsible for handling client request and generate responses..
 
+Routing:
+  The Routing is mechanism controls which controller receives which requests.
+  Generally a Controller can have more than one Route , different route can perfrom   different actions.
 
+Decorators:
+ @Controller() => without parameter
+ @Controller('users') => root route
 
+HTTP method decorators
+ @Get => get req => GET /rootRoute eg  ; GET /users
+ @Post=> POST req
+ @Put => Update req
+ @Delete => Delete Req.
 
+ All these operations are called "CURD" operations
 
+Eg:
 
+user/user.service.ts
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class UserService {
+  constructor() {}
+  //users api
+  //CURD operations
+  public findAll(): string {
+    return 'users';
+  }
+  public save(): string {
+    return 'save';
+  }
+  public update(): string {
+    return 'update';
+  }
+  public remove(): string {
+    return 'remove';
+  }
+}
+
+user/user.controller.ts
+import { Controller, Delete, Get, Post, Put } from '@nestjs/common';
+import { UserService } from './user.service';
+
+@Controller('users')
+export class UserController {
+    constructor(private userService: UserService) { }
+    // Get /users
+    @Get()
+    findAll(): string {
+        return this.userService.findAll()
+    }
+    @Post()
+    save(): string {
+        return this.userService.save()
+    }
+    @Delete()
+    remove(): string {
+        return this.userService.remove()
+    }
+    @Put()
+    update(): string {
+        return this.userService.update()
+    }
+}
+.....................................................................................
+			   Nest CURD Generator
+...................................................................................
+
+Resource:
+  In RestFull web services, apis are defined or structured as reources.
+  Resource represents domain eg: "UserResource,ProduceResource,CustomerResource"
+
+Why CURD Generator?
+
+ Without Curd generator for a domain/resource,you have to write so many steps
+
+  => Generate module -> nest g mo
+  => Generate a controller -> nest g co 
+  => Generate a service -> nest g s
+  => Generate a generate entity 
+
+ With Curd generator you can do every thing with single command.
+
+Generate a new Resource
+
+ nest g resource 
+   =>creates a module,controller,service,entity class,DTO ,spec files...
+
+eg
+nest g resource products
+? What transport layer do you use? REST API
+? Would you like to generate CRUD entry points? Yes
+CREATE src/products/products.controller.ts (957 bytes)
+CREATE src/products/products.controller.spec.ts (596 bytes)
+CREATE src/products/products.module.ts (268 bytes)
+CREATE src/products/products.service.ts (651 bytes)
+CREATE src/products/products.service.spec.ts (474 bytes)
+CREATE src/products/dto/create-product.dto.ts (33 bytes)
+CREATE src/products/dto/update-product.dto.ts (181 bytes)
+CREATE src/products/entities/product.entity.ts (24 bytes)
+UPDATE package.json (1975 bytes)
+UPDATE src/app.module.ts (707 bytes)
+√ Packages installed successfully.
+
+ 
+  
 
 
 
