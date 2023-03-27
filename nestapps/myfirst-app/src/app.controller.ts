@@ -3,10 +3,14 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
+  constructor(private appService: AppService) {}
+  //apis
+  // @Get() // http get method
+  // public hello(): string {
+  //   return 'Hello Nest App!'
+  // }
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  public hello(): string {
+    return this.appService.sayHello();
   }
 }
