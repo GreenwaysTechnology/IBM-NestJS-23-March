@@ -911,7 +911,7 @@ export class UserController {
 ...................................................................................
 
 Resource:
-  In RestFull web services, apis are defined or structured as reources.
+  In RestFull web services, apis are defined or structured as resources.
   Resource represents domain eg: "UserResource,ProduceResource,CustomerResource"
 
 Why CURD Generator?
@@ -945,30 +945,713 @@ CREATE src/products/entities/product.entity.ts (24 bytes)
 UPDATE package.json (1975 bytes)
 UPDATE src/app.module.ts (707 bytes)
 √ Packages installed successfully.
+.................................................................................
+ .....................................................................................
+			 Status Code,Headers,Responses
+...................................................................................
 
+Status Code :
+   By default Nest returns status code based on http operations
+ Get - 200
+ Post -201
+if you want to change the status, you can use @HttpCode decorator.
+
+import { Controller,Get, HttpCode } from '@nestjs/common';
+
+@Controller('users')
+export class UserController {
+
+    @Get()
+    @HttpCode(200)
+    public findAll():string {
+        return 'Users'
+    }
+    //
+    @Get("list")
+    public listAll():string {
+        return 'user list'
+    }
+}
+.....................................................................................					Headers
+
+There are two types of headers
+
+1.Response header which is sent by server
+2.Request Header which is sent by client to the server
+
+Nest sends default headers automatically.
+
+x-Powered-By:express  -  the underlying web container of nest 
+content-type - the type of value we return
+ based on data type , the contenttype would be changed
+etc...
+
+What if i want to send headers?
+
+it can be custome header, or built in header.
+
+We have @Header decorator
+    @Get()
+    @HttpCode(200)
+    @Header("secret","abc#239a")
+    public findAll(): string {
+        return 'Users'
+    }
+.....................................................................................
+  				Response types
+.....................................................................................
+				Response types
+.....................................................................................
+
+Nest automatically parses the content based on the return type
+ Primitives -  string 
+  default would be 
+      content-type text/html; charset=utf-8
+
+  Object
+     if you send object, nest converts into json, adds header 
+   application/json
+
+How to return object?
+
+    @Get("user")
+    public findUser(): any {
+        return {
+            id: 1,
+            name: 'Subramanian'
+        }
+    }
+Here return type is any, we need to change the return type.
+
+users/user.type.ts
+
+export class User {
+    id: number
+    name: string
+}
+
+ @Get("user")
+ public findUser(): User {
+        return {
+            id: 1,
+            name: 'Subramanian'
+        }
+  }		
+
+How to return array of users?
+    @Get("list")
+    public listAll(): Array<User> {
+        return [
+            {
+                id: 1,
+                name: 'Subramanian'
+            },
+            {
+                id: 2,
+                name: 'Ram'
+            },
+            {
+                id: 3,
+                name: 'Arun'
+            }
+        ]
+    }
+.....................................................................................
+				
+				
+Response conversion logic is now is natural way ,Nest interally uses either express or fastify framework.
+
+By default nest uses express as web container, in future if you change from express to fastify, you dont need to change the code.
+
+Coding style:
+  Platform nutural code
+  Lib-Specific code - express
+
+
+Express way of returning code:
+  //express way of returning response
+    @Get("express")
+    public findAllUsingExpress(@Res() response) {
+        return response.status(200).json({ id: 1, name: 'something' })
+    }
+....................................................................................
+			  Request Payload
+...................................................................................
+
+Client sends data to Server:
+............................
+Client can send data various ways
+
+1.Parameters
+   =>Path Parameter
+   =>Query Parameter /Query String
+2.Payload
+   =>Request Body
+
+Path Params  -@Param: -Route Parameters
+.....................
+  Path parameters are used to construct dynamic urls
+
+http://www.mydomain.com/api/users/8
+
+Syntax 1:
+ //path parameters
+  @Get(':id') // which is dynamic value
+  findOne(@Param() params):string{
+      console.log(params)
+     return `${params.id}`;
+  }
+
+Syntax 2:
+   @Get(':id') // which is dynamic value
+    findOne(@Param('id') id: string): string {
+        return `${id}`;
+    }
+
+.....................................................................................
+				Query Parameters
+.....................................................................................
+
+if you want to send Query params
+
+    //GET  /users/1?sort=asc;location=xxx
+    @Get('query')
+    public filterUsers(@Query() queryparams): string {
+        console.log(queryparams);
+        return 'query params';
+    }
+
+Req:
+GET users/query?a=10&b=23
+....................................................................................
+				Payload
+....................................................................................
+
+As of now we have sent data over "URL" 
+  => /users/1
+  => /users/filter?order=asc
+
+if you want to send data over payload - like customers,payments,products as json
+thats where payload comes into picture.
+
+
+@Body - reads data
+req.body -reads data
+
+
+Steps:
+
+1.
+@Post("create")
+public create(){
+   return "user created"
+}
+
+2.read payload
+ @Post("create")
+  public create(@Body() payload){
+        console.log(payload)
+        return "user created"
+    }
+}
+
+3.if you are using ts, you need to create type for incoming payload
+ DTO - Data transfer object
+
+A DTO is an object that defines how the data will be sent over the network.
+We can define DTO schema by using ts interface,class or type keyword.
+Nest recommends only classes because classes are part of es 6 standard, suppose if later if you want to migrate code to js stack it will not be any issues
+
+src/users/create-user.dto.ts
+
+export class CreateUserDto {
+    id: number;
+    name: string;
+    age: number;
+    status: boolean
+}
+  //read body
+    @Post("create")
+    public create(@Body() createUserDto: CreateUserDto) {
+        console.log(createUserDto)
+        return "user created"
+    }
+........
+import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { User } from './user.type';
+
+@Injectable()
+export class UserService {
+  constructor() { }
+  //users api
+  //CURD operations
+  public findAll(): Array<User> {
+    return [
+      { id: 1, name: 'Subramanian Murugan', email: 'subu@gmail.com' },
+      { id: 1, name: 'admin', email: 'admin@gmail.com' }
+    ]
+  }
+  public save(user: CreateUserDto): string {
+    console.log(user)
+    return 'save';
+  }
+  public update(): string {
+    return 'update';
+  }
+  public remove(): string {
+    return 'remove';
+  }
+}
+....................................................................................
+				................................................................................				Asynchronicity -Async Respsonse
+..................................................................................
+
+By default node is async,so we can send responses asyncly.
+
+if you talk to database, it may delay...
+
+Styles of async programming:
+1.callbacks
+2.Promises 
+3.Promises with async and await
+4.Rxjs => Nest has integrated rxjs for advanced async operations with streaming           support
+
+
+If response type is String or object or Array - Which is sync call
+if response type is Promise or Rxjs-Observable - Which is async call
+
+eg:
+type:
+
+export class User {
+    id: number;
+    name: string;
+    email?: string
+    status?:boolean
+}
+
+service
+user.service.ts
+import { Injectable } from '@nestjs/common';
+import { filter, Observable, of, map } from 'rxjs';
+import { CreateUserDto } from './dto/create-user.dto';
+import { User } from './user.type';
+
+//mock data
+const USERS: User[] = [
+  { id: 1, name: 'Subramanian Murugan', email: 'subu@gmail.com',status:true },
+  { id: 2, name: 'admin1', email: 'admin1@gmail.com',status:false  },
+  { id: 3, name: 'admin2', email: 'admin2@gmail.com',status:true  },
+  { id: 4, name: 'admin3', email: 'admin3@gmail.com',status:false  },
+  { id: 5, name: 'admin4', email: 'admin4@gmail.com',status:true  },
+
+];
+@Injectable()
+export class UserService {
+  constructor() { }
+  //users api
+  //CURD operations
+  //sync api
+  public findAll(): Array<User> {
+    return [
+      { id: 1, name: 'Subramanian Murugan', email: 'subu@gmail.com',status:true },
+      { id: 2, name: 'admin1', email: 'admin1@gmail.com',status:false  },
+      { id: 3, name: 'admin2', email: 'admin2@gmail.com',status:true  },
+      { id: 4, name: 'admin3', email: 'admin3@gmail.com',status:false  },
+      { id: 5, name: 'admin4', email: 'admin4@gmail.com',status:true  },
+
+    ];
+  }
+
+  //return promise
+  public findAllAsync(): Promise<Array<User>> {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, 100, USERS);
+    });
+  }
+  //return Observable
+  public findAllReactive(): Observable<User[]> {
+    return of(USERS).pipe(map(results => results.filter(user => {
+      return user.status ===true
+    })));
+  }
+  public save(user: CreateUserDto): string {
+    console.log(user);
+    return 'save';
+  }
+  public update(): string {
+    return 'update';
+  }
+  public remove(): string {
+    return 'remove';
+  }
+}
+
+controller:
+import {
+    Controller,
+    Delete,
+    Get,
+    Post,
+    Put,
+    HttpCode,
+    Header,
+    Res,
+    Param,
+    Query,
+    Body,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UserService } from './user.service';
+import { User } from './user.type';
+
+@Controller('users')
+export class UserController {
+    constructor(private userService: UserService) { }
+    // Get /users
+    @Get()
+    @HttpCode(200)
+    @Header('secret', 'A$%#$3434') // custom header
+    findAll(): Array<User> {
+        return this.userService.findAll();
+    }
+
+    //async api 
+    @Get('async')
+    findAllAsync(): Promise<User[]> {
+        return this.userService.findAllAsync();
+    }
+    @Get('reactive')
+    findAllReactive(): Observable<User[]> {
+        return this.userService.findAllReactive();
+    }
+
+    //express way of writting.
+    @Get('express')
+    //@Res will get Express Response Object as dependency
+    public findAllUsingExpress(@Res() response) {
+        //express style code:
+        return response.status(200).json({ id: 1, name: 'something' });
+    }
+    @Get('query')
+    public query(@Query() queryparams): any {
+        console.log(queryparams)
+        return queryparams
+    }
+
+    //path parameters
+    //   @Get(':id') // which is dynamic value
+    //   findOne(@Param() params):string{
+    //       console.log(params)
+    //      return `${params.id}`;
+    //   }
+    @Get(':id') // which is dynamic value
+    findOne(@Param('id') id: string): string {
+        return `${id}`;
+    }
+
+    //return a user
+    @Get('user')
+    getUser(): User {
+        //object is returned
+        //nest converts this object into json.
+        return {
+            id: 1,
+            name: 'Subramanian Murugan',
+            email: 'sasubramanian_md@hotmail.com',
+        };
+    }
+
+    @Post()
+    save(@Body() user: CreateUserDto): string {
+        return this.userService.save(user);
+    }
+    @Delete()
+    remove(): string {
+        return this.userService.remove();
+    }
+    @Put()
+    update(): string {
+        return this.userService.update();
+    }
+}
+.....................................................................................
+			 Handling Errors 
+.....................................................................................
+
+How to handle errors in Nest?
+ Nest comes with built in exception layer which is used for processing all unhandled exceptions across application.
+ Nest provides global exception handler.
+ if exception is not handled in the application code, it is caught by this layer which then automatically sends an appropriate userfriendly responses.
+
+Filters:
+  Filter is a code gets executed automatically when some thing happens
+  Errors/Exceptions are handled by "Filters".
+
+ There is a built in filter provided by Nest to handle global Errors and its type is
+ "HttpException"
+
+Global Error handler throws an error in form of json
+
+  { 
+   "statusCode":500,
+    "message" : "Internal Server error"
+ }
+
+How to throw exception?
+
+simple 
+ @Get('error')
+    doSomething() {
+        throw new HttpException("You are restricted to access this resource", HttpStatus.FORBIDDEN)
+    }
+
+With Biz logic
+  @Get(':id') // which is dynamic value
+    findOne(@Param('id') id: number): string {
+        //biz logic to ensure that id must be greater than 5
+        if (id >= 5) {
+            return `${id}`;
+        } else {
+            throw new HttpException('The id which is requested not found',HttpStatus.NOT_FOUND)
+        }
+
+With Promise:
+
+Controller:
+
+ @Get(':id') // which is dynamic value
+  async findOne(@Param('id') id: number): Promise<any> {
+    //biz logic to ensure that id must be greater than 5
+    // if (id >= 5) {
+    //     return `${id}`;
+    // } else {
+    //     throw new HttpException('The id which is requested not found',HttpStatus.NOT_FOUND)
+    // }
+    try {
+      const res = await this.userService.findById(id);
+      return res;
+    } catch (err) {
+      throw new HttpException(
+        { status: HttpStatus.NOT_FOUND, error: 'something went wrong' },
+        HttpStatus.NOT_FOUND,
+        { cause: err },
+      );
+    }
+  }
+
+Service api:
+ public findById(id: number): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (id >= 5) {
+        setTimeout(resolve, 100, id)
+      } else {
+        setTimeout(reject, 100, 'Id Not found')
+      }
+    })
+  }
+.....................................................................................
+				Built in Exception Classes
+
+Nest provides lot built in exception classes
+
+HttpException is a base class for all Exception
+
+eg:
+ BadRequestException
+ RequestTimeoutException
+ NotAcceptableException
+ etc........
+
+Apart from these exceptions i want to write Biz Exceptions we call custom exceptions
+
+useridnotfound.exception.ts
+
+import { HttpException } from "@nestjs/common";
+
+
+export class UserIdNotFoundException extends HttpException {
+    constructor(message: string, status) {
+        super(message, status)
+    }
+}
+
+How to use this?
+ @Get(':id') // which is dynamic value
+  async findOne(@Param('id') id: number): Promise<any> {
+    //biz logic to ensure that id must be greater than 5
+    // if (id >= 5) {
+    //     return `${id}`;
+    // } else {
+    //     throw new HttpException('The id which is requested not found',HttpStatus.NOT_FOUND)
+    // }
+    try {
+      const res = await this.userService.findById(id);
+      return res;
+    } catch (err) {
+      // throw new HttpException(
+      //   { status: HttpStatus.NOT_FOUND, error: 'something went wrong' },
+      //   HttpStatus.NOT_FOUND,
+      //   { cause: err },
+      // );
+      throw new UserIdNotFoundException('User id Not Found',HttpStatus.NOT_FOUND)
+    }
+  }
+....................................................................................
+			 Customization of Error Messages
+				(Filters)
+....................................................................................
+
+Generally Error Messages are generated by Nest Exception layer.
+if you want to controll or alter the Exception layer for eg i want to add logging feature or i want different JSON schema based on some biz logic.
+
+Solution is Exception Filters
+
+if you want to alter the flow of exception handling, you need to capture request and response underlying objects
+
+How to write filter?
+
+1.write a class 
+2.implement an interface called "ExceptionFilter"
+
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from "@nestjs/common";
+import { Response, Request } from 'express'
+
+
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+    catch(exception: HttpException, host: ArgumentsHost) {
+        //read host(express/fastify) parameters
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>()
+        const request = ctx.getRequest<Request>()
+        const status = exception.getStatus()
+
+        //prepare custom error response 
+        response.status(status)
+        .json({ statusCode: status, timesStamp: new Date().toISOString(), path: request.url })
+
+    }
+}
+
+How to use this filter in your code? How to bind filter?
+
+ @Get('error')
+  @UseFilters(new HttpExceptionFilter())
+  doSomething() {
+    throw new ForbiddenException();
+  }
+.....................................................................................
+			   Middlewares
+....................................................................................
+
+What is Middleware?
+  Middleware is a function which is called before the route handler.
  
+Client request----------------->Router---Handles req and send Response
+
+Client request--------Middleware--------->Router---Handles req and send Response
+
+Role of Middlewares:
+1.execute any code
+2.if you want request and response objects
+3.terminate request-response cycle
+4.you can chain the middlewares
+
+Use Cases:
+=>logging
+=>Authentication token processing
+=>location based access
+
+Steps:
+
+1.write a class 
+2.implement an interface called "NestMiddleware"
+3.over ride method called "use"
+4.use method takes "express request,response,next" args.
+
+Note:
+ Middleware can be written for specific routes or global routes.
+
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    //middleware logic : logging
+    console.log(`URL => ${req.url}`);
+    console.log(`Method=> ${req.method}`);
+    console.log(`Date =>`, new Date().toISOString);
+    //you must call next : function  moving to next middleware
+    next();
+  }
+}
+How to activate middlewares?
+
+ Incase of global middleware
+
+Global Middlewares:
+if you want to apply middlewares for every request and every method in the application -  Global Middlewares
+
+Global Middlewares are registeried in the main that means application object.
+
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { GreeterModule } from './greeter/greeter.module';
+import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
+import { LoggerMiddleware } from './middlewares/logger.middleware';
+
+//in order to qualify this is Module object
+@Module({
+  imports: [GreeterModule, UsersModule, ProductsModule], // if AppModule has any submodules as dependency
+  controllers: [AppController], // if AppModule has controller as dependency
+  providers: [AppService], // if AppModule has Service as Dependency.
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    console.log('middleware');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
+.....................................................................................
+			   Functional middlewares
+
+Functions can be used to create middlewares which is recommended.
+
+import { Request, Response, NextFunction } from 'express';
+
+export function greeter(req:Request,res:Response,next:NextFunction){
+    console.log('......Welcome........')
+    next()
+  }
   
+How to register multiple middlewares?
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { GreeterModule } from './greeter/greeter.module';
+import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
+import { LoggerMiddleware } from './middlewares/logger.middleware';
+import { greeter } from './middlewares/greeter.middleware';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//in order to qualify this is Module object
+@Module({
+  imports: [GreeterModule, UsersModule, ProductsModule], // if AppModule has any submodules as dependency
+  controllers: [AppController], // if AppModule has controller as dependency
+  providers: [AppService], // if AppModule has Service as Dependency.
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    console.log('middleware');
+    consumer.apply(LoggerMiddleware, greeter).forRoutes('*');
+  }
+}
 
 
 
