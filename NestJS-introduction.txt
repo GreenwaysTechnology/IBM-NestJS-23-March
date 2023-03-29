@@ -998,8 +998,6 @@ We have @Header decorator
         return 'Users'
     }
 .....................................................................................
-  				Response types
-.....................................................................................
 				Response types
 .....................................................................................
 
@@ -1652,6 +1650,712 @@ export class AppModule implements NestModule {
     consumer.apply(LoggerMiddleware, greeter).forRoutes('*');
   }
 }
+..........................*******************************............................
+Configuration
+Database
+MicroServices
+....................................................................................
+				Configuration
+....................................................................................
+
+In Distributed applications(Monolithic or Microservices), we need to isloate some information from the application code
+=>Data connection urls,userName,password
+=>Authentication Tokens
+=>Global messages 
+etc...
+Applications often run in different envs like dev,prod,test,staging env.
+what if i want to run application configuration based on env.
+
+Eg:
+ Web server port is 3000 in dev
+ Web Server port should be 8080 in production env.
+
+In Micro Service Development there is a design pattern : "Cross cutting concerns"
+
+Externalized configuration - 
+    externalize all configuration such as database location and credentials
+...................................................................................
+
+		Nest.js And Micro Service Cross cutting Concerns
+..................................................................................
+
+How to read configuration information in node.js?
+
+=>via env variables
+How to set env variables in os?
+
+In windows
+ =>via windows env settings
+ =>via command line - using SET Command
+In unix/Linux/Mac
+ =>via os env settings
+ =>via command line => using export command
+
+In Node js we can read environment variables via 
+ process.env
+process is object reference which represents Node.js Process
+env is object reference which encapuslate env variables.
+
+How to set env variable in Node repl?
+
+>node
+Welcome to Node.js v18.12.1.
+Type ".help" for more information.
+> process.env.DB_USERNAME="root"
+'root'
+>
+
+How to read it?
+process.env.DB_USERNAME
+'root'
+
+How to use process.env variable inside code?
+
+Steps:
+1.write code
+const express = require('express')
+
+const app = express();
+
+app.get("/users", (req, res) => {
+    res.end('Config app')
+})
+
+app.listen(3000, () => {
+    console.log('Express Server')
+})
+
+2.Set env variables
+E:\session\IBM\2023\March\NestJS\myexpressapp>SET message=Your Message
+
+E:\session\IBM\2023\March\NestJS\myexpressapp>node src/app.js
+
+E:\session\IBM\2023\March\NestJS\myexpressapp>node src/app.js
+Express Server is running at  3000
+^C
+E:\session\IBM\2023\March\NestJS\myexpressapp>SET port=8080
+
+E:\session\IBM\2023\March\NestJS\myexpressapp>node src/app.js
+Express Server is running at  8080
+....................................................................................
+			 Drawbacks of setting env variables in OS
+...................................................................................
+
+=> What if the env settings itself dynamic- via other configuration softwares you want to supply.
+=> if i want to keep the configuration information in a file
+
+Solution : 
+ File based configurations
+
+There is a file extension called ".env" files
+
+Yourapp
+ |
+ src
+ .env #This file must present in the root director of app
+
+steps:
+=> npm install dotenv --save
+=> write .env file
+# .env file
+MESSAGE="Hello"
+PORT="8080"
+NODE_ENV="development"
+=>reading
+
+require('dotenv').config()
+const express = require('express')
+const app = express();
+const message = process.env.MESSAGE || 'Default Message'
+const port = process.env.PORT || 3000
+app.get("/users", (req, res) => {
+    res.end(message)
+})
+
+app.listen(port, () => {
+    console.log('Express Server is running at ', port)
+})
+.....................................................................................
+			Nest and Configurations
+	
+In order to implement distributed configurations in nest, nest offers  a module
+"ConfigModule"  Which exposes the service called "ConfigService" which loads .env file.
+
+How to implement to read config data?
+
+=> nest provides a npm dependency?
+
+ npm install @nestjs/config
+
+@nestjs/config package internally uses "dotenv"
+
+>We need to inject Config Module inside Main Module:
+....................................................
+
+Some Modules may have two methods
+
+=>forRoot 
+     =>Which is used to inject dependency at application level(Global) -App.module
+	app.module.ts
+	eg: imports:[YourModule.forRoot()]
+=>forFeature
+     =>Which is used to inject dependency at specific module level
+      	customers.module.ts
+	  imports:[YourModule.forFeature()]
+  
+
+Step: 1
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+
+@Module({
+  imports: [ConfigModule.forRoot()],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+ConfigModule.forRoot()
+  Will read and parse .env files from the environment and assigned to "process.env".
+  Store the results into an Object called "ConfigService Object"
+
+Step 2: Add Config File in the project root Dir.
+
+Note: 
+ you can add multiple env files, the default file is ".env"
+ ".prod.env"
+ ".staging.env"
+ ".dev.env"
+ ".test.env"
+
+ConfigModule.forRoot({envFilePath:'.dev.env'})
+ConfigModule.forRoot(['.env.dev.local'])
+
+If you want to use the env every where in your app.
+
+ ConfigModule.forRoot({isGlobal:true})
+
+Step 2: Add .env file
+
+config-app
+ |
+.env
+  # .env file
+  WELCOME_MESSAGE="Hello Config"
+
+Step 3: How to read?
+  Via ConfigService Object
+
+ConfigService Object can be injected into "Controlle or Inside another service"
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config/dist';
+
+@Injectable()
+export class AppService {
+  constructor(private configService: ConfigService) {}
+  getHello(): string {
+    return 'Hello World!';
+  }
+}
+Read Data:
+
+this.configService.get<string>('WELCOME_MESSAGE')
+
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config/dist';
+
+@Injectable()
+export class AppService {
+  constructor(private configService: ConfigService) { }
+  getHello(): string {
+    return this.configService.get<string>('WELCOME_MESSAGE')
+  }
+}
+
+What if config key is not present in the .env file?
+ Default value
+
+this.configService.get<string>('WELCOME_MESSAGE', 'How are you?');
+
+
+How to configure Port and access inside main.ts?
+
+import { ConfigService } from '@nestjs/config/dist/config.service';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get('HTTP_PORT') || 3000;
+  await app.listen(port);
+}
+bootstrap();
+....................................................................................
+			  Database Integration
+....................................................................................
+
+Nest js is database independant.
+You can integrate any database including sql and nosql.
+You can select any database based on your client or project req.
+
+			  Basic Arch
+
+				Nest App
+				   |
+			        Database Drivers
+				   |
+				Node Runtime
+				    |
+				 DataBase
+
+Database drivers are just js npm packages.
+
+if you are working in plain js node app or express app.
+  https://expressjs.com/en/guide/database-integration.html#mysql
+
+In in the begining in nodejs database access was very hard because we have to write all database operations in imperative way.
+.....................................................................................
+				ORM Frameworks
+.....................................................................................
+What is ORM?
+  Object Relational Mapping is  a concept to map database operations in object oriented way.
+ Object Relational Mapping (ORM) is a technique used in creating a "bridge" between object-oriented programs and, in most cases, relational databases.
+
+ORM is a spec helps to access database informations in object oriented way.
+
+Implementation of ORM:
+.....................
+ The very first ORM was implemented in "java EJB System".
+ Later the framework was created called "Hibernate"
+ Later the ORM standarized by spec called "JPA" -java Persistency Api.
+ Other Languages and frameworks started introducing orm frameworks..
+
+Node js javascript(typescript) based ORMs:
+.........................................
+ Now a days we have so many frameworks available in the market.
+ Nest js provides abstractions on the top of most popular orm frameworks
+
+Nest js ORM framework:
+......................
+=>MikroORM
+=>Sequelize
+=>TypeORM
+=>Prisma => It is more popular today..
+=>Knex => for suitable for oracle integration
+=>mongoose=>ODM framework fro Mongodb
+
+You can consider 
+=>TypeOrm
+=>Sequelize
+=>Prisma
+=>Mongoose
+..................................................................................
+			 TypeORM implementation
+...............................................................................
+
+Core concepts:
+
+1.Entities
+    Table representation,column Representation,Relationship representations
+2.Repositories
+    It represents apis for database operations - save,select,update,remove...
+
+Implementations:
+.................
+
+1.Database should be up and running.
+ =>mysql database
+How to start database ?
+ =>mysql or postgreSql.
+You can down load mysql or postgresql in you local machine and install , start
+You can download via docker
+ =>docker must have installed
+
+Step 1: Create app:
+>nest new typeorm-app
+
+Step 2: Setup database via docker
+
+typeorm-app
+  |
+ docker-compose.yml
+  version: "3"
+services:
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+    ports:
+      - "3307:3307"
+
+Step 3 :
+ Install typeorm and mysql driver
+
+npm install @nestjs/typeorm typeorm mysql2
+
+Step 4: 
+  TypeOrm integration with our app - Configuration.
+  TypeOrm is available as sub module.
+
+Establishing Connection:
+ Connection string which includes where is the database,what creditentials,database name,location...
+
+app.module.ts
+
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+@Module({
+  imports: [TypeOrmModule.forRoot({
+    type: 'mysql',
+    host: 'localhost',
+    port: 3306,
+    username: 'root',
+    password: 'root',
+    database: 'test',
+    autoLoadEntities: true,
+    synchronize: true    ,
+  })],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule { }
+....................................................................................
+Step 5: Interacting with database.
+ 
+Database stores data in the tables
+Table consist of columns and rows
+Database basic operations
+ 
+=>SELECT -Read
+=>INSERT  - CREATE
+=>UPDATE => update
+=>DELETE => remove
+These operations are done by SQL queries
+https://www.mysqltutorial.org/
+
+In order to communicate with database tables orm framworks provides two design patterns
+
+1.Repository pattern
+2.Active Record Pattern
+
+TypeOrm framework supports Repository Pattern.
+
+Core concepts In Repository pattern
+
+ Nest provides decorators to declare entities, repository...
+
+1.Entity
+   Entity is object which represents table
+
+import{Entity } from 'typeorm'
+
+@Entity() 
+export class User{
+
+}  
+ |
+In database 
+ create table user()
+
+Entity Declaration
+
+2.Repository Object
+   For doing query operations
+...
+
+Step 6: Entity,Repository,Service,Controller
+
+nest g resource user
+
+Entity configuration:
+..................
+user/entities/user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
+
+@Entity()
+export class User {
+    //column mapping
+    @PrimaryGeneratedColumn() //primary key with id auto generation
+    id: number
+    @Column()
+    firstName: string
+    @Column()
+    lastName: string
+    @Column()
+    isActive: boolean
+}
+
+DTO mapper
+
+user/dto/create-user-dto.ts
+export class CreateUserDto {
+    firstName: string;
+    lastName: string;
+    isActive?: boolean
+}
+
+Service Layer:
+..............
+ Where we interact with database like save,update,delete,select
+
+Inject Repsitory Object with Entity Mapping
+
+ constructor(@InjectRepository(User) private userRepository: Repository,) { }
+
+
+import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+
+@Injectable()
+export class UserService {
+  constructor(@InjectRepository(User) private userRepository: Repository) {}
+
+  create(createUserDto: CreateUserDto): Promise<User> {
+    //create user entity object
+    const user = new User();
+    //populate the data which is submitted user
+    user.firstName = createUserDto.firstName;
+    user.lastName = createUserDto.lastName;
+    user.isActive = createUserDto.isActive;
+    //persist data into database
+    return this.userRepository.save(user);
+  }
+
+  findAll(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} user`;
+  }
+
+  update(id: number, updateUserDto: UpdateUserDto) {
+    return `This action updates a #${id} user`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} user`;
+  }
+}
+
+Controller:
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { UserService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) { }
+
+  @Post()
+  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+
+  @Get()
+  findAll(): Promise<User[]> {
+    return this.userService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(+id, updateUserDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(+id);
+  }
+}
+
+User Module Configuration:
+...........................
+user/user.module.ts
+import { Module } from '@nestjs/common';
+import { UserService } from './user.service';
+import { UserController } from './user.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+
+@Module({
+  //configure all the entities which is part of this module
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UserController],
+  providers: [UserService]
+})
+export class UserModule { }
+....................................................................................
+
+Service:
+import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectRepository(User) private userRepository: Repository<User>,
+  ) { }
+
+  create(createUserDto: CreateUserDto): Promise<User> {
+    //create user entity object
+    const user = new User();
+    //populate the data which is submitted user
+    user.firstName = createUserDto.firstName;
+    user.lastName = createUserDto.lastName;
+    user.isActive = createUserDto.isActive;
+    //persist data into database
+    return this.userRepository.save(user);
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
+  async findOne(id: number): Promise<User> {
+    return this.userRepository.findOneBy({ id: id })
+  }
+
+  update(id: number, updateUserDto: UpdateUserDto) {
+    return this.userRepository.update(id, updateUserDto);
+  }
+
+  async remove(id: number): Promise<any> {
+    return this.userRepository.delete(id)
+  }
+}
+
+Controller:
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { UserService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) { }
+
+  @Post()
+  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+
+  @Get()
+  findAll(): Promise<User[]> {
+    return this.userService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<User> {
+    return this.userService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<any> {
+    return this.userService.update(+id, updateUserDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<void> {
+    return this.userService.remove(+id);
+  }
+}
+
+Entity Mapper
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateUserDto } from './create-user.dto';
+
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
+
+export class CreateUserDto {
+    id?:number
+    firstName: string;
+    lastName: string;
+    isActive?: boolean
+}
+
+Entity:
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
+
+@Entity()
+export class User {
+    //column mapping
+    @PrimaryGeneratedColumn() //primary key with id auto generation
+    id: number
+    @Column()
+    firstName: string
+    @Column()
+    lastName: string
+    @Column()
+    isActive: boolean
+}
+UserModule:
+import { Module } from '@nestjs/common';
+import { UserService } from './user.service';
+import { UserController } from './user.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+
+@Module({
+  //configure all the entities which is part of this module
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UserController],
+  providers: [UserService]
+})
+export class UserModule { }
+...............................******************....................................
+			MicroServices
+....................................................................................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

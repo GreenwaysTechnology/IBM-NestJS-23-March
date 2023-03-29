@@ -1,15 +1,15 @@
+require('dotenv').config()
 const express = require('express')
-const postRouter = require('./routers/post.router')
 
-//create application object 
-const app = express()
+const app = express();
 
-//bind router with app object 
-app.use('/api/posts',postRouter)
+const message = process.env.MESSAGE || 'Default Message'
+const port = process.env.PORT || 3000
 
+app.get("/users", (req, res) => {
+    res.end(message)
+})
 
-
-//start server 
-app.listen(3000, () => {
-    console.log(`Express Server is running`)
+app.listen(port, () => {
+    console.log('Express Server is running at ', port)
 })
