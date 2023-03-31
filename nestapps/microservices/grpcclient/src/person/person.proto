@@ -1,0 +1,18 @@
+//person proto file defines the person apis
+syntax = "proto3";
+package person;
+
+//request type
+message PersonById{
+    int32 id = 1;
+}
+//response type
+message Person {
+    int32 id=1;
+    string name=2;
+}
+//api
+service PersonService{
+    //request-reply pattern
+    rpc findOne(PersonById) returns (Person) {}
+}

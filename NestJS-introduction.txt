@@ -2813,6 +2813,1022 @@ export class UserController {
 Task for You:
   Integrate Database layer using TypeOrm 
 .....................................................................................
+				Hybrid Micro Service
+....................................................................................
+
+Microservice implementation in Nest we can do in two ways 
+
+1.Pure api based - like pure http or tcp (non http)
+2.Hybrid style - coimbing http+tcp or http+grpc or http+graphql or tcp+http+graphql
+   Each module can be exposed as separate service
+
+customerManagement - Microservices
+	|
+	customerModule - http apis + non http 
+        ProductsModule - nonhttp
+        PaymentModule- grpc
+
+main.ts
+  const app = await NestFactory.create(AppModule); //http
+
+  //Bind both http and tcp servers
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: {
+      port: 3001,
+    },
+  });
+  //start http and tcp servers
+  
+  await app.startAllMicroservices();
+  //port
+  await app.listen(3003);
+  console.log(`Application is runnning on ${await app.getUrl()}`);
+
+....................................................................................
+
+@MessagePattern
+@EventPattern 
+  Must be part of only controllers
+
+src/math
+   math.module.ts
+import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MathController } from './math.controller';
+import { MathService } from './math.service';
+
+@Module({
+  imports: [ClientsModule.register([{ name: 'MATH_SERVICE', transport: Transport.TCP }])],
+  controllers: [MathController],
+  providers: [MathService]
+})
+export class MathModule { }
+
+ math.controller.ts
+import { Controller, Get, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { MessagePattern } from '@nestjs/microservices';
+import { MathService } from './math.service';
+
+//Rest Controller + tcp controller
+@Controller('math')
+export class MathController {
+    constructor(@Inject("MATH_SERVICE") private readonly client: ClientProxy, private mathService: MathService) { }
+
+    @Get("sum")
+    public execute() {
+        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        const pattern = { cmd: 'sum' }
+        return this.client.send<number>(pattern, numbers)
+    }
+
+    @MessagePattern({ cmd: 'sum' })
+    public sum(data: number[]) {
+        return this.mathService.sum(data)
+    }
+
+}
+
+math.service.ts
+import { Injectable } from '@nestjs/common';
+import { MessagePattern } from '@nestjs/microservices';
+
+@Injectable()
+export class MathService {
+
+    public sum(data: number[]) {
+        return (data || []).reduce((a, b) => a + b)
+    }
+
+}
+.....................................................................................
+			 Microservice Communication
+.....................................................................................
+
+How do services in a microservice architecture communicate?
+
+Use RPI for inter-service communication.
+The client uses a request/reply-based protocol to make requests to a service.
+
+Two types of Communications:
+
+1.Remote Proceducer Invocation
+2.Messaging
+
+RPI Implementations/RPI technologies:
+.....................................
+1.REST
+2.TCP
+3.gRPC
+4.Apache Thrift
+
+1.REST
+  HTTP Based Microservice implementations.
+  This is common microservice implementations.
+We have implemented REST based Microservices in Nest
+
+2.RPC - Remote Procedure call
+  TCP
+  gRpc
+
+ Remote Procedure call,the remote methods are called with help of TCP protcal.
+  We have implemented TCP Based Microservices in Nest.
+
+The advanced version of RPC-  gRPC
+  gRPC is advanced RPI based framework for building inter service communications
+...........................&&&&&&&&&&&.............................................
+			 gRpc - googleRpc
+...................................................................................
+
+............................................................................................. 
+ 			Internet based RPC/RPI - HTTP Driven RPC
+.............................................................................................
+
+WebServices:
+ It is a remote program, having api , communicated via http protocal , transfer data
+
+SOAP Based:
+ it is similar to legacy rpc but communicated over soap over http,transfer xml based data.
+
+REST: 
+ It is also RPC but only works with http, carries multiple data format,json was understood light models
+
+
+SOA Architectures:
+ based on xml distributed programming
+
+.....................................................................................
+			MicroService Representations
+.....................................................................................
+Micro services are represented / Microservices are designed based on communications
+
+1.Remote Procedure Invocation
+2.Messaging
+
+RPI Technologies:
+1.REST
+2.RPC-(gRPC)
+3.Apache Thrift
+
+
+1.REST
+  HTTP Based Microservice implementations.
+  This is common microservice implementations.
+We have implemented REST based Microservices in Nest
+
+2.RPC
+   Remote Procedure call,the remote methods are called with help of TCP protcal.
+  We have implemented TCP Based Microservices in Nest.
+
+The advanced version of RPI(RPC) -  gRPC
+  gRPC is advanced RPI based framework for building inter service communications
+
+............................................................................................. 
+ 			Internet based RPC/RPI - HTTP Driven RPC
+.............................................................................................
+
+WebServices:
+ It is a remote program, having api , communicated via http protocal , transfer data
+
+SOAP Based:
+ it is similar to legacy rpc but communicated over soap over http,transfer xml based data.
+
+REST: 
+ It is also RPC but only works with http, carries multiple data format,json was understood light models
+
+
+SOA Architectures:
+ based on xml distributed programming
+..............................................................................................
+				Microservices and API Design
+.............................................................................................
+
+1.REST API 
+   -easy to use/develop
+ -what if my app is using multiple languages
+    RPC
+
+Drawbacks of REST/HTTP1.1 protocal.
+
+REST arch built on the top of "http 1.1" protocal version.
+
+
+1.multi request-reponse cycle
+   in every req-res - tcp connection is created
+
+2.Headers are plain text which takes lot of space
+
+● HTTP is stateless
+	○ Headers are sent in every request
+	○ Carries info like Cookie
+	○ Plain text - relatively large in size
+	○ Can not be compressed
+
+3.Serialization & Deserialization
+   since http1.1 send always text, not binary which are speedy.
+
+4.API Contract
+   There is no api contract (strongly typed) which makes confussion among applications.
+
+5.Client SDK
+   There is no proper client sdk to process http messages.
+...................................................................................
+				Google and http Protocal
+.....................................................................................
+
+Google started a project called SPDY (pronounced "speedy") is a deprecated open-specification communication protocol that was developed primarily at Google for transporting web content.[1] SPDY manipulates HTTP traffic
+
+later spdy was opensourced named "HTTP/2"
+
+SPDY became the basis for HTTP/2 specification
+
+Why?
+-tcp multiplxing -  non blocking arch
+-Binary
+-Header Compression
+-Flow Control -Streaming
+............................................................................................
+			RPC - Framework alternate to REST based design
+............................................................................................
+
+Google has  started working on RPC systems more than 15 years from now , for service communicaitons.
+
+Project Name 
+Stubby
+● RPC Framework from Google
+● 15 years
+● 10 billions reqs / sec!!!!
+● Cross-platform
+........................................
+● Tightly coupled with infrastructure
+............................................................................................
+				gRPC 
+
+● Developed at Google
+● Inspired by Stubby
+● Released in 2016
+● Adopted by
+	○ Netflix
+	○ Microsoft
+● Belongs to CNCF
+...........................................................................................
+				Why gRPC
+
+HTTP2 is default.
+○ Binary
+○ Multiplexing
+○ Flow-control
+● Non-blocking, Streaming bindings
+● Protobuf
+○ Strict Typing
+○ DTO
+○ Service definitions
+○ Language-agnostic
+○ Auto-generated bindings for multiple languages
+● Great for mobile apps
+..............................................................................................
+			ProtoBuff-Protocol Buffers
+..............................................................................................
+
+
+● IDL (interface description language) for API
+● Platform neutral
+● Language neutral
+● Serializing/Deserializing structured data
+● Very Fast / Optimized for interservices communication
+● Provides client libraries automatically for many languages!
+○ Java
+○ C++
+○ Javascript
+○ Go
+○ Ruby
+○ C#
+○ Python
+
+.....................................................................................
+			Steps to Build gRPC- api style services
+.............................................................................................
+
+1.Design Api using ProtoBuff language
+
+2.Pick your language for writing services - java,js(node - any framework(nest))
+   2.1. write service
+   2.2. write servers
+   2.3. clients to communicate services via server.
+.....................................................................................
+ProtoBuff IDL program:
+......................
+
+1.protobuff file has to be saved - serviceName.proto
+
+2.proto is strongly typed , that means we have to specifify the type
+
+3.Field Numbers:
+  -which is used by proto interal representation to identify the fields like in REST-Json
+is identified by "key": "value" - "id" : 1
+
+ each field in the message definition has a unique number.
+
+ These field numbers are used to identify your fields in the message binary format, and should not be changed once your message type is in use. Note that field numbers in the range 1 through 15 take one byte to encode
+ncluding the field number and the field's type (you can find out more about this in Protocol Buffer Encoding). Field numbers in the range 16 through 2047 take two bytes. So you should reserve the numbers 1 through 15 for very frequently occurring message elements. Remember to leave some room for frequently occurring elements that might be added in the future.
+
+The smallest field number you can specify is 1, and the largest is 229 - 1, or 536,870,911
+
+
+person.proto
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32 age = 2;
+}
+....................................................................................
+				ProtoBuff Lanaguage				
+.....................................................................................
+Message Fundamentals
+Service Definitions
+
+  
+.....................................................................................			Complex Types-Composit Types
+.....................................................................................
+proto files
+
+person.proto
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+}
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32  age = 2;
+  Address address = 3;
+
+}
+.....................................................................................
+			Collecition types - repeated - arrays
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+}
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32  age = 2;
+  Address address = 3;
+  repeated string skills = 4;
+
+}
+....................................................................................
+.............................................................................................
+					Map-Type
+............................................................................................
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+}
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32  age = 2;
+  Address address = 3;
+  repeated string skills = 4;
+  map<string,string> values=5;
+
+}
+.....................................................................................
+					Enum
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+}
+
+enum Feedback {
+  UNKNOWN = 0; //default value
+  GOOD = 1 ;
+  BAD = 2;
+  VERYGOOD = 3;
+}
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32  age = 2;
+  Address address = 3;
+  repeated string skills = 4;
+  map<string, string> values = 5;
+  Feedback feeback = 6;
+
+}
+............................................................................................
+				 Default Values
+............................................................................................
+int32 / any number type ->0
+bool ->false
+string ->empty string
+enum ->first value
+repeated -> empty list
+map ->wrapper / empty map
+
+.........
+				Proto and Modularity
+............................................................................................
+			
+src/main/proto/common/address.proto
+
+
+syntax = "proto3";
+//option
+option java_multiple_files = true;
+//package
+option java_package = "com.wipro.models";
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+}
+
+................................................................................
+			Modualrity and Proto Buff
+
+src/main/proto/person.proto
+
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+//link other proto files
+import "common/address.proto";
+
+enum Feedback {
+  UNKNOWN = 0; //default value
+  GOOD = 1 ;
+  BAD = 2;
+  VERYGOOD = 3;
+}
+
+//type definition ; in java which is represented as entity class
+message Person {
+  //fields of the entity
+  // string is type
+  //name is field(variable)
+  //1 is identifier
+  string name = 1;
+  int32  age = 2;
+  Address address = 3;
+  repeated string skills = 4;
+  map<string, string> values = 5;
+  Feedback feeback = 6;
+
+}
+
+..........................................................................................
+				Unary Service
+............................................................................................
+
+Steps:
+
+1.define proto service definition
+
+
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+//message types
+message HelloRequest{
+  string name = 1;
+  repeated string hobbies = 2;
+}
+message HelloResponse {
+  string greeting = 1;
+}
+//service definition
+service  GreetingService {
+  //define rpc operation: Unary: Request-Reply - Fire and Forget -  HTTP - GET
+  rpc greeting(HelloRequest) returns (HelloResponse);
+}
+....................................................................................
+
+                                   Server Streaming
+
+Use case : money withdrawal , i want to with draw money 10$ each of total 40$
+					
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message  BalanceCheckRequest{
+  int32 account_number = 1;
+}
+message Balance {
+  int32 amount = 1;
+}
+//WithDrawRequest
+
+message WithDrawRequest {
+  int32 account_number = 1;
+  int32 amount = 2;
+}
+//Money to be withdrawn
+message Money {
+  int32 money = 1;
+}
+
+//Bank service
+service BankService {
+  //unary
+  rpc getBalance(BalanceCheckRequest) returns (Balance);
+  //server streaming
+  rpc withdraw(WithDrawRequest) returns(stream Money);
+
+}
+....................................................................................
+			 Client Streaming
+....................................................................................
+                         
+				
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+
+message  BalanceCheckRequest{
+  int32 account_number = 1;
+}
+message Balance {
+  int32 amount = 1;
+}
+//WithDrawRequest
+
+message WithDrawRequest {
+  int32 account_number = 1;
+  int32 amount = 2;
+}
+//Money to be withdrawn
+message Money {
+  int32 money = 1;
+}
+
+//Bank service
+service BankService {
+  //unary
+  rpc getBalance(BalanceCheckRequest) returns (Balance);
+  //Client streaming
+  rpc withdraw(stream WithDrawRequest) returns(Money);
+
+}
+....................................................................................
+			BiDirectional  Streaming
+....................................................................................
+                         
+bankservice.proto
+				
+//proto buff language version ; if dont, default version is 2
+syntax = "proto3";
+package "bank"
+
+message  BalanceCheckRequest{
+  int32 account_number = 1;
+}
+message Balance {
+  int32 amount = 1;
+}
+//WithDrawRequest
+
+message WithDrawRequest {
+  int32 account_number = 1;
+  int32 amount = 2;
+}
+//Money to be withdrawn
+message Money {
+  int32 money = 1;
+}
+
+//Bank service
+service BankService {
+  //unary
+  rpc getBalance(BalanceCheckRequest) returns (Balance);
+  //bidirectional streaming
+  rpc withdraw(stream WithDrawRequest) returns(stream Money);
+
+}
+.....................................................................................
+.....................................................................................
+			 How to Build gRpc Microservices
+.....................................................................................
+
+Req:
+1.proto file
+2.gRpc Server
+3.Deploy gRpc apps on gRpc server
+4.Client apps can start communicating with grpc clients.
+
+Steps :
+
+1. create nest app
+   nest new grpcmicroservice
+
+2.install packages
+  
+  npm install @nestjs/microservices
+  npm i --save @grpc/grpc-js @grpc/proto-loader --save
+
+3.nest-cli.json
+    will have proto buff file dedection configuration.
+{
+  "compilerOptions": {
+    "assets": [
+      "**/*.proto"
+    ],
+    "watchAssets": true
+  }
+}
+
+4.Create MicroService gRpc:
+  Note: It can be hybrid app or With another app(http) 
+ 
+import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions } from '@nestjs/microservices';
+import { AppModule } from './app.module';
+import { grpcClientOptions } from './grpc-client.options';
+
+async function bootstrap() {
+  /**
+   * This example contains a hybrid application (HTTP + gRPC)
+   * You can switch to a microservice with NestFactory.createMicroservice() as follows:
+   *
+   * const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+   *  transport: Transport.GRPC,
+   *  options: {
+   *    package: 'hero',
+   *    protoPath: join(__dirname, './hero/hero.proto'),
+   *  }
+   * });
+   * await app.listen();
+   *
+   */
+  const app = await NestFactory.create(AppModule);
+  app.connectMicroservice<MicroserviceOptions>(grpcClientOptions);
+
+  await app.startAllMicroservices();
+  await app.listen(3001);
+  console.log(`Application is running on: ${await app.getUrl()}`);
+}
+bootstrap();
+.....................................................................................
+			Grpc Server and Grpc Client Apps
+....................................................................................
+
+Server:
+
+Steps
+1.nest new grpcserver
+2.
+ npm i --save @grpc/grpc-js @grpc/proto-loader
+ npm i --save @nestjs/microservices
+
+3.nest-cli.json
+{
+  "compilerOptions": {
+    "assets": ["**/*.proto"],
+    "watchAssets": true
+  }
+}
+4.src/hero/hero.proto
+
+// hero/hero.proto
+syntax = "proto3";
+
+package hero;
+
+service HeroesService {
+  rpc FindOne (HeroById) returns (Hero) {}
+}
+
+message HeroById {
+  int32 id = 1;
+}
+
+message Hero {
+  int32 id = 1;
+  string name = 2;
+}
+
+Types:
+src/hero/interfaces
+
+hero-by-id.interface.ts
+export interface HeroById {
+  id: number;
+}
+src/hero/hero.interface.ts
+export interface Hero {
+  id: number;
+  name: string;
+}
+src/hero/hero.service.ts
+
+import { Observable } from "rxjs";
+import { HeroById } from "./hero-by-id.interface";
+import { Hero } from "./hero.interface";
+
+export interface HeroService {
+    findOne(data: HeroById): Observable<Hero>;
+}
+
+Service Defintion:
+
+import { Controller } from '@nestjs/common';
+import { GrpcMethod } from '@nestjs/microservices';
+import { Metadata, ServerUnaryCall } from '@grpc/grpc-js';
+import { HeroById } from './interfaces/hero-by-id.interface';
+import { Hero } from './interfaces/hero.interface';
+import { HeroService } from './interfaces/hero.service';
+
+
+@Controller()
+export class HeroesController {
+  @GrpcMethod('HeroesService', 'FindOne')
+  findOne(data: HeroById, metadata: Metadata, call: ServerUnaryCall<any, any>): Hero   {
+    const items = [
+      { id: 1, name: 'John' },
+      { id: 2, name: 'Doe' },
+    ];
+    return items.find(({ id }) => id === data.id);
+  }
+}
+
+src/hero/hero.module.ts
+import { Module } from '@nestjs/common';
+import { HeroesController } from './hero.controller';
+
+@Module({
+  imports: [],
+  controllers: [HeroesController],
+})
+export class HeroModule { }
+
+src/app.module.ts
+import { Module } from '@nestjs/common';
+import { HeroModule } from './hero/hero.module';
+
+@Module({
+  imports: [HeroModule],
+})
+export class AppModule {}
+
+src/main.ts
+import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { AppModule } from './app.module';
+import { join } from 'path'
+
+async function bootstrap() {
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AppModule,
+    {
+      transport: Transport.GRPC,
+      options: {
+        package: 'hero',         
+        protoPath: join(__dirname, 'hero/hero.proto'),
+      },
+    },
+  );
+  await app.listen();
+  console.log(`Grpc Server is Running... `);
+}
+bootstrap();
+
+..................................................................................
+
+Grpc Client App : HTTP App:
+...........................
+
+Steps
+1.nest new grpcclient
+2.
+ npm i --save @grpc/grpc-js @grpc/proto-loader
+ npm i --save @nestjs/microservices
+
+3.nest-cli.json
+{
+  "compilerOptions": {
+    "assets": ["**/*.proto"],
+    "watchAssets": true
+  }
+}
+4.src/hero/hero.proto
+
+// hero/hero.proto
+syntax = "proto3";
+
+package hero;
+
+service HeroesService {
+  rpc FindOne (HeroById) returns (Hero) {}
+}
+
+message HeroById {
+  int32 id = 1;
+}
+
+message Hero {
+  int32 id = 1;
+  string name = 2;
+}
+
+5.main.ts -HTTP server
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3001);
+}
+bootstrap();
+
+6.src/hero/hero.proto
+
+// hero/hero.proto
+syntax = "proto3";
+
+package hero;
+
+service HeroesService {
+  rpc FindOne (HeroById) returns (Hero) {}
+}
+
+message HeroById {
+  int32 id = 1;
+}
+
+message Hero {
+  int32 id = 1;
+  string name = 2;
+}
+Note: The file should match exactly same as server.
+
+6.Types:
+src/hero/interfaces
+
+hero-by-id.interface.ts
+export interface HeroById {
+  id: number;
+}
+src/hero/hero.interface.ts
+export interface Hero {
+  id: number;
+  name: string;
+}
+src/hero/hero.service.ts
+
+import { Observable } from "rxjs";
+import { HeroById } from "./hero-by-id.interface";
+import { Hero } from "./hero.interface";
+export interface HeroService {
+    findOne(data: HeroById): Observable<Hero>;
+}
+
+7.src/hero/grpc-client.options : Server Configuration
+
+import { ClientOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+
+export const grpcClientOptions: ClientOptions = {
+  transport: Transport.GRPC,
+  options: {
+    package: 'hero', // ['hero', 'hero2']
+    protoPath: join(__dirname, './hero/hero.proto'),
+  },
+};
+
+7.src/hero/hero.module.ts
+import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+// import { grpcClientOptions } from '../grpc-client.options';
+import { HeroController } from './hero.controller';
+import { join } from 'path';
+import { grpcClientOptions } from 'src/grpc-client.options';
+
+@Module({
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'HERO_PACKAGE',
+        ...grpcClientOptions,
+      },
+    ]),
+  ],
+  controllers: [HeroController],
+})
+export class HeroModule { }
+
+src/hero/hero.controller.ts
+import { Controller, Get, Inject, OnModuleInit, Param } from '@nestjs/common';
+import {
+  ClientGrpc
+} from '@nestjs/microservices';
+import { Observable } from 'rxjs';
+import { HeroById } from './interfaces/hero-by-id.interface';
+import { Hero } from './interfaces/hero.interface';
+import { HeroService } from './interfaces/hero.service';
+
+@Controller('hero')
+export class HeroController implements OnModuleInit {
+  private readonly items: Hero[] = [
+    { id: 1, name: 'John' },
+    { id: 2, name: 'Doe' },
+  ];
+  private heroService: HeroService;
+
+  constructor(@Inject('HERO_PACKAGE') private readonly client: ClientGrpc) { }
+
+  onModuleInit() {
+    this.heroService = this.client.getService<HeroService>('HeroesService');
+    this.heroService.findOne({ id: 1 }).subscribe(x => console.log(x));
+  }
+
+  @Get(':id')
+  getById(@Param('id') id: string): Observable<Hero> {
+    return this.heroService.findOne({ id: +id });
+  }
+
+
+}
+app.module.ts
+
+import { Module } from '@nestjs/common';
+import { HeroModule } from './hero/hero.module';
+
+@Module({
+  imports: [HeroModule],
+})
+export class AppModule {}
+
+...................................................................................
+
+Open Two cmd prompt
+grpcserverclient\grpcclient>npm run start:dev
+grpcserverclient\grpcserver>npm run start:dev
+
+open browser/postman
+http://localhost:3001/hero/1
+
+Response:
+{
+id: 1,
+name: "John"
+}
+
+
+
+
+
 
 
 
