@@ -2939,11 +2939,9 @@ The advanced version of RPC-  gRPC
   gRPC is advanced RPI based framework for building inter service communications
 ...........................&&&&&&&&&&&.............................................
 			 gRpc - googleRpc
-...................................................................................
-
-............................................................................................. 
+..................................................................................... 
  			Internet based RPC/RPI - HTTP Driven RPC
-.............................................................................................
+.....................................................................................
 
 WebServices:
  It is a remote program, having api , communicated via http protocal , transfer data
@@ -3824,6 +3822,733 @@ Response:
 id: 1,
 name: "John"
 }
+..............&&&&&&&&&&&&&&&&&&&&&&&&&&&&&..........................................
+				GraphQL
+....................................................................................
+
+What is GraphQL?
+  GraphQL is alternate for REST API.
+
+REST api desigened based "fixed api model"
+
+GET  /api/customers // List of customers
+  id
+  name
+  address
+    city
+    state
+    zipcode
+
+GET  /api/customers?query=zipcode
+
+  id
+  name
+  address
+    zipcode
+
+What if i want to query customer information based on city..
+ I need to write a new logic inside code.
+
+How to design api based on "dynamic biz req"?
+
+  GraphQL is a language created to build "api's" to make biz req very dynamic.
+
+Graph + QL =>
+   What is Graph?
+      Connnected nodes - tree model which represents data 
+            =>Connected Objects
+      QL means Query language , is programming language to access data from the graph.
+
+GraphQL is api language.
+  Implementation can be programming language netural, platform netural.
+
+Graphql with java
+Graphql with javascript	
+
+How to begin with GraphQL?
+
+GraphQL offers two languages
+ =>Server side
+     Server side developers "who build graphql apis"
+
+GraphQL Schema Language -Server side
+
+ =>Client Side
+    Client side develoepers "who consume/access graphql apis"
+  GraphQL Query Language -Client server
+....................................................................................
+			 GraphQL apps based on "IDL"
+....................................................................................
+
+How to begin writing graphql server side apps?
+
+1.write graphql schema file
+   which explains objects and fields and relationship
+   which explains apis specification - CURD
+
+2.Write program in any language- javascript/typescript on node platform- nest framework
+  
+Nest js offers infrastructure to build graphql apis.
+Nest js uses "Apollo Server"
+
+.....................................................................................
+
+Nest and GraphQl Develoment?
+
+Nest supports two programming model
+=>Schema first model
+   schema design and api implementation
+=>code first model
+  write api first and generate schema out of it.
+
+
+1.Schema first model:
+....................
+
+How to design schema?
+
+fileName must be saved
+
+ "fileName.graphql"
+ "customer.graphql"
+
+Schema contains two parts
+
+1.Type definition
+   =>Define entity and fields.
+
+book.graphql
+
+type Book {
+  title: String!
+  author: Author
+}
+type Author {
+  name: String
+  books: [Book] 
+}
+Schema Language Basics:
+
+
+SDL Core concepts:
+
+Every Schema which starts with Root Type- Schema
+Schema is just Object
+
+General Syntax
+type typeName {
+  field:Type       ===>  Class Book { title:string }
+}
+
+eg:
+type Book {
+ title:String
+ isbn:String
+}
+Core Type:
+
+Operations Type
+
+type schema {
+  query:Query
+  mutation:Mutation
+  subscription:Subscription
+}
+Query
+
+type Query {
+  greet:String
+  name:String
+}
+
+Data Types:
+1.scallar types : Primitives
+
+1.Int -  32 bit signed integer
+2.String - UTF-8 char sequence
+3.Boolean - true or  false
+4.Float - singed double precision floating point value
+5.ID - which represents uniquie identifer, used to fetch object ,
+
+Fields:
+ variables
+Each Field must have type
+Advanced Types
+
+1.enum - special scalar that is holding particular set of allowed values.
+
+
+2.Custom Type/Complex Type
+
+type Query {
+   peron:Person
+}
+//complex Type
+
+type Person {
+  id:ID
+  name:String
+  city:String
+  age:Int
+}
+
+type Book {
+ title:String
+ isbn:String
+ author:Author
+}
+type Author {
+ name:String
+}
+.............................................................................
+
+....................................................................................
+List/Collection/Array fields:
+
+books:[Book] //collection type -array type
+
+
+type Book {
+ title:String
+ isbn:String
+ author:Author
+}
+type Author {
+ name:String
+ books:[Book]
+}
+..................................................................................
+Field Nullability:
+ By default any field accept null.
+Sometimes i dont want to allow null - !
+
+type Author {
+ name:String! #cant return null
+ books:[Book]
+}
+type Author {
+ name:String
+ books:[Book!]
+}
+////////////////////////////////////////////////////////////////////////////////////
+Operations Type: =>Service classes class Bookservice { booksApi(){} authors(){}}
+
+//read Only
+type Query {
+  books:[Book]
+  authors:[Author]
+}
+
+Client Side:
+query GetBooksAndAuthors {
+   books {
+	title
+   }
+   authors {
+	name
+   }
+}
+
+Write and Read Operations
+
+type Mutation {
+  addBook(title:String,author:String):Book
+}
+
+Client Side :Request
+mutation CreateBook {
+   addBook(title:'Nest js in Action',author:'X'){
+      title
+      author{
+	name
+      }
+   }
+  
+}
+
+			  Parametermized api
+
+
+type Query{
+  filterByCity(city:String):Person
+}
+
+type Person {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+				How to return collection /List of Data
+
+
+type Query{
+  findAllPersons():[Person]!
+}
+
+type Person {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+				 Interfaces
+
+Interface is an abstract common type which can be reused by other types
+
+interface Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+}
+
+type Player implements Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+  teams:[Team]
+}
+
+type Employee implements Human {
+  id:ID
+  name:String!
+  city:String
+  age:Int
+  
+}
+........................................................................................
+				Union Types
+
+A variable can hold possible list of types
+
+union userId = String | Int
+
+............................................................................................
+				Input Types
+
+This is very usefull in mutations for getting input 
+
+input Person {
+ name:String
+ city:String
+}
+..................................................................................
+
+.....................................................................................
+			 NestJS GraphQl Applications
+.....................................................................................
+NestJs provides abstraction on the top of the libs and frameworks like - Apollo and Mercurius Servers
+
+Apollo is based Express container where Mercurius is based on fasitfy container.
+
+Nest js provides powerfull typescripts features to enbable fast development of graphql apps.
+
+Nest js offers a module called "@nestjs/graphql" with driver @nestjs/apollo
+
+
+How to test Graphql apps?
+
+ -GraphQl client apps
+    -tools -  playground - web interface tool distribtued as part of core appllo               servers
+
+
+....................................................................................
+			 NestJS GraphQl Applications
+.....................................................................................
+NestJs provides abstraction on the top of the libs and frameworks like - Apollo and Mercurius Servers
+
+Apollo is based Express container where Mercurius is based on fasitfy container.
+
+Nest js provides powerfull typescripts features to enbable fast development of graphql apps.
+
+Nest js offers a module called "@nestjs/graphql" with driver @nestjs/apollo
+
+How to create graphQl application?
+
+The GraphQL Apps can be built using two methods
+
+1.the code first
+2.the schema first
+
+From the code, you can generate schema files
+
+1.the code first
+  In the code first approach, you use decorators and TypeScript classes to generate the corresponding GraphQL schema. This approach is useful if you prefer to work exclusively with TypeScript and avoid context switching between language syntaxes.
+
+2.the schema first
+ In the schema first approach, the source of truth is GraphQL SDL (Schema Definition Language) files. SDL is a language-agnostic way to share schema files between different platforms. Nest automatically generates your TypeScript definitions (using either classes or interfaces) based on the GraphQL schemas to reduce the need to write redundant boilerplate code.
+
+
+How to test Graphql apps?
+
+ -GraphQl client apps
+    -tools -  playground - web interface tool distribtued as part of core appllo               servers
+
+steps:
+
+1.create graphql app
+
+nest new graphqlserverapp
+
+2.install depdenencies
+
+# For Express and Apollo (default)
+$ npm i @nestjs/graphql @nestjs/apollo graphql apollo-server-express
+
+# For Fastify and Apollo
+# npm i @nestjs/graphql @nestjs/apollo graphql apollo-server-fastify
+
+# For Fastify and Mercurius
+# npm i @nestjs/graphql @nestjs/mercurius graphql mercurius fastify
+
+How to configure GraphQL server?
+
+
+App.module.ts
+
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+
+@Module({
+  imports: [
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      debug: false,
+      playground: true,
+    }),
+  ],
+})
+export class AppModule {}
+
+>npm run start:dev
+
+When you start the server with this configuration
+
+    throw Error(
+            ^
+Error: Apollo Server requires either an existing schema, modules or typeDefs
+    at ApolloServer.constructSchema (E:\session\IBM\2022\nov\nestapps\microservices\graph
+
+What we need?
+  We need either sdl file or TypeDefs
+
+Schema First Approach:
+
+src/cats/
+  cats.graphql - schema file
+
+type Query {
+  cats: [Cat]
+  cat(id: ID!): Cat
+}
+
+type Mutation {
+  createCat(createCatInput: CreateCatInput): Cat
+  
+}
+
+type Subscription {
+  catCreated: Cat
+}
+
+type Owner {
+  id: Int!
+  name: String!
+  age: Int
+  cats: [Cat!]
+}
+
+type Cat {
+  id: Int
+  name: String
+  age: Int
+  owner: Owner
+}
+"""
+Test comment
+"""
+input CreateCatInput {
+  name: String
+  age: Int
+}
+
+cats.module.ts
+import { Module } from "@nestjs/common";
+@Module({
+    imports: [],
+    providers: []
+})
+export class CatsModule {
+
+}
+
+app.module.ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CatsModule } from './cats/cats.module';
+
+@Module({
+  imports: [
+    CatsModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      debug: false,
+      playground: true,
+      typePaths: ['./**/*.graphql'],
+    //  transformSchema: (schema) => upperDirectiveTransformer(schema, 'upper'),
+      installSubscriptionHandlers: true,
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
+}
+bootstrap();
+................
+
+npm run start:dev
+
+open browser and lanuch playground(Client Graphql testing tool,like post man)
+
+http://localhost:3000/graphql
+.....................................................................................
+
+Resolvers:
+  Resolvers are api implmentations which provides GraphQL Operations
+    Query,Mutations,Subscriptions
+
+@Resolver('Cats')
+export class CatsResolver{
+
+ @Query()
+ pubic async cats(){
+      //logic
+ }
+
+}
+
+import { ParseIntPipe } from '@nestjs/common';
+import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { PubSub } from 'graphql-subscriptions';
+import { Cat } from '../graphql-schema';
+import { CatsService } from './cats.service';
+import { CreateCatDto } from './dto/create-cat.dto';
+
+const pubSub = new PubSub();
+
+@Resolver('Cat')
+export class CatsResolver {
+  constructor(private readonly catsService: CatsService) {}
+
+  @Query('cats')
+  async getCats() {
+    return this.catsService.findAll();
+  }
+
+  @Query('cat')
+  async findOneById(
+    @Args('id', ParseIntPipe)
+    id: number,
+  ): Promise<Cat> {
+    return this.catsService.findOneById(id);
+  }
+
+  @Mutation('createCat')
+  async create(@Args('createCatInput') args: CreateCatDto): Promise<Cat> {
+    const createdCat = await this.catsService.create(args);
+    pubSub.publish('catCreated', { catCreated: createdCat });
+    return createdCat;
+  }
+
+  @Subscription('catCreated')
+  catCreated() {
+    return pubSub.asyncIterator('catCreated');
+  }
+}
+
+Service Class: which holds biz logic of app 
+ Here we use array of data: later we can replace with database.
+
+cat.service.ts
+import { Injectable } from '@nestjs/common';
+import { Cat } from '../graphql-schema';
+
+@Injectable()
+export class CatsService {
+    private readonly cats: Array<Cat & { ownerId?: number }> = [
+        { id: 1, name: 'Cat1', age: 5, ownerId: 1 },
+        { id: 2, name: 'Cat2', age: 5, ownerId: 1 },
+        { id: 3, name: 'Cat3', age: 5, ownerId: 1 },
+        { id: 4, name: 'Cat4', age: 5, ownerId: 1 },
+        { id: 5, name: 'Cat5', age: 5, ownerId: 1 }
+    ];
+
+    create(cat: Cat): Cat {
+        cat.id = this.cats.length + 1;
+        this.cats.push(cat);
+        return cat;
+    }
+
+    findAll(): Cat[] {
+        return this.cats;
+    }
+
+    findOneById(id: number): Cat {
+        return this.cats.find(cat => cat.id === id);
+    }
+}
+
+Type classes.
+Schema Mapper classes:
+
+src/graphql-schema.ts
+
+export class CreateCatInput {
+    name?: Nullable<string>;
+    age?: Nullable<number>;
+  }
+  
+  export abstract class IQuery {
+    abstract cats():
+      | Nullable<Nullable<Cat>[]>
+      | Promise<Nullable<Nullable<Cat>[]>>;
+  
+    abstract cat(id: string): Nullable<Cat> | Promise<Nullable<Cat>>;
+  }
+  
+  export abstract class IMutation {
+    abstract createCat(
+      createCatInput?: Nullable<CreateCatInput>,
+    ): Nullable<Cat> | Promise<Nullable<Cat>>;
+  }
+  
+  export abstract class ISubscription {
+    abstract catCreated(): Nullable<Cat> | Promise<Nullable<Cat>>;
+  }
+  
+  export class Owner {
+    id: number;
+    name: string;
+    age?: Nullable<number>;
+    cats?: Nullable<Cat[]>;
+  }
+  
+  export class Cat {
+    id?: Nullable<number>;
+    name?: Nullable<string>;
+    age?: Nullable<number>;
+    owner?: Nullable<Owner>;
+  }
+  
+  type Nullable<T> = T | null;
+
+DTO:
+
+cats/dto/create-cat-dto.ts
+import { CreateCatInput } from "src/graphql-schema";
+
+export class CreateCatDto extends CreateCatInput {
+  age: number;
+}
+
+src/cats/cats.module.ts
+import { Module } from '@nestjs/common';
+import { CatsResolver } from './cats.resolver';
+import { CatsService } from './cats.service';
+
+@Module({
+  providers: [CatsService, CatsResolver],
+})
+export class CatsModule {}
+....................................................................................
+Steps:
+
+1.You need to define schema definition file
+2.You need to define Mapper classes for Each Type in schema
+3.You need to write graphql implementation class -Resolver
+4.YOu need to write Service class which will  interact with database.
+5.You need to test GraphQl Using GraphQl playground tool
+
+....................................................................................
+
+
+How to test graphql apps:
+
+ YOu have to know "Graphql query language syntax"
+ https://graphql.org/learn/queries/
+
+basic operation 
+
+Input:
+query {
+  cats {
+    name
+  }
+}
+
+Response:
+{
+  "data": {
+    "cats": [
+      {
+        "name": "Cat1"
+      },
+      {
+        "name": "Cat2"
+      },
+      {
+        "name": "Cat3"
+      },
+      {
+        "name": "Cat4"
+      },
+      {
+        "name": "Cat5"
+      },
+      {
+        "name": "mycat"
+      },
+      {
+        "name": "yourcat"
+      }
+    ]
+  }
+}
+
+Mutation:
+mutation createCateOperations($ep: CreateCatInput) {
+  createCat(createCatInput: $ep) {
+    name
+    id
+  }
+}
+Parameter
+{
+  "ep": {
+    "name": "yourcat",
+    "age":46
+  }
+}
+
+if you want test subscription, you need client program which supports streaming.
+
+
+
 
 
 
